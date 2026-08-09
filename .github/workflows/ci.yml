@@ -1,0 +1,66 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      # No `pip install` step — the repo's whole premise is zero dependencies.
+      - name: The guided tour (test suite)
+        run: python test_vectordb.py
+      - name: The 30-second demo
+        run: python vectordb.py
+      - name: Extra chapters (if any)
+        run: |
+          shopt -s nullglob
+          for f in extras/[0-9]*_*.py; do
+            echo "== $f"
+            python "$f"
+          done
+          for t in extras/test_*.py; do
+            echo "== $t"
+            python "$t"
+          done
+
+  translations:
+    # Translations must be the same program with different prose.
+    # check_translation.py enforces that token-by-token.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Code-identity check on every translated source file
+        run: |
+          shopt -s nullglob
+          found=0
+          for f in translations/*/vectordb.py translations/*/test_vectordb.py; do
+            found=1
+            python tools/check_translation.py "$f"
+          done
+          [ "$found" = 1 ] || echo "no translated source files yet — ok"
+      - name: Translated test suites must also pass
+        run: |
+          shopt -s nullglob
+          for f in translations/*/test_vectordb.py; do
+            dir=$(dirname "$f")
+            echo "== $dir"
+            # A translation dir may translate only the tests; give it the
+            # original vectordb.py to import in that case.
+            [ -f "$dir/vectordb.py" ] || { cp vectordb.py "$dir"; cleanup="$dir/vectordb.py"; }
+            (cd "$dir" && python test_vectordb.py)
+            [ -z "${cleanup:-}" ] || { rm "$cleanup"; cleanup=; }
+          done
