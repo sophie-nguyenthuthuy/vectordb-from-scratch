@@ -72,10 +72,10 @@ with just `translations/<lang>/README.md`. Tiếng Việt is seeded first in
 
 - [Chapter 6 — IVF](extras/06_ivf.py): k-means partitioning + `nprobe`, the
   *other* big ANN family — and the index that can actually delete
+- [Chapter 7 — Product quantization](extras/07_pq.py): 16× compression, and
+  the ADC trick that searches the bytes without decompressing them
 
 Wishlist:
-
-- Product quantization: how 6GB of vectors fits in 200MB
 - HNSW's neighbor-diversity heuristic (§4 of the paper) and why it matters
 - Pre- vs post-filtering: filtered ANN done properly
 - Binary quantization + rescoring
