@@ -1,9 +1,9 @@
 """
-test_vectordb.py — the guided tour.
+test_vectordb.py — tour có hướng dẫn.
 
-Each test is a chapter claim from vectordb.py, restated as an assertion.
-Read them in order; they build on each other. Runs with plain Python
-(`python test_vectordb.py`) or pytest — no dependencies either way.
+Mỗi test là một luận điểm chương trong vectordb.py, phát biểu lại thành
+assertion. Hãy đọc theo thứ tự; chúng xây tiếp lên nhau. Chạy bằng Python
+thuần (`python test_vectordb.py`) hoặc pytest — cả hai đều không cần cài gì.
 """
 
 import math
@@ -15,16 +15,17 @@ from vectordb import (BruteForceIndex, HNSWIndex, VectorDB, cosine, dot,
                       embed, normalize)
 
 # ---------------------------------------------------------------------------
-# A shared toy dataset: 2000 random 16-dim vectors. Gaussian components make
-# directions uniform on the sphere — the hardest, most honest case for ANN
-# (real embeddings are easier: they live on low-dimensional manifolds).
+# Bộ dữ liệu đồ chơi dùng chung: 2000 vector 16 chiều ngẫu nhiên. Các thành
+# phần Gaussian cho hướng phân bố đều trên mặt cầu — trường hợp khó nhất,
+# trung thực nhất với ANN (embedding thật dễ hơn: chúng sống trên các
+# manifold ít chiều).
 # ---------------------------------------------------------------------------
 N, DIM = 2000, 16
 _rng = random.Random(42)
 DATASET = [[_rng.gauss(0, 1) for _ in range(DIM)] for _ in range(N)]
 QUERIES = [[_rng.gauss(0, 1) for _ in range(DIM)] for _ in range(20)]
 
-_built = {}  # build each index once, share across tests
+_built = {}  # mỗi chỉ mục chỉ build một lần, các test dùng chung
 
 
 def build(kind):
@@ -37,32 +38,32 @@ def build(kind):
 
 
 # ---------------------------------------------------------------------------
-# Chapter 1 — Similarity
+# Chương 1 — Độ tương đồng
 # ---------------------------------------------------------------------------
 
 def test_ch1_cosine_measures_direction_not_length():
-    """cosine(a, b) only cares about the ANGLE between vectors: a vector is
-    maximally similar to itself (1.0) and to any scaled copy of itself —
-    which is exactly why magnitude is safe to throw away."""
+    """cosine(a, b) chỉ quan tâm GÓC giữa hai vector: một vector tương đồng
+    tối đa với chính nó (1.0) và với mọi bản sao co giãn của nó — chính là
+    lý do vứt bỏ độ lớn là an toàn."""
     a = [1.0, 2.0, 3.0]
     assert math.isclose(cosine(a, a), 1.0)
-    assert math.isclose(cosine(a, [10.0, 20.0, 30.0]), 1.0)   # same direction
-    assert math.isclose(cosine([1, 0], [0, 1]), 0.0)          # orthogonal
-    assert math.isclose(cosine([1, 0], [-1, 0]), -1.0)        # opposite
+    assert math.isclose(cosine(a, [10.0, 20.0, 30.0]), 1.0)   # cùng hướng
+    assert math.isclose(cosine([1, 0], [0, 1]), 0.0)          # vuông góc
+    assert math.isclose(cosine([1, 0], [-1, 0]), -1.0)        # ngược hướng
 
 
 def test_ch1_the_normalization_trick():
-    """After normalizing both vectors, plain dot() equals cosine() — this
-    identity is why every DB normalizes at insert time and never computes
-    an actual cosine again."""
+    """Sau khi normalize cả hai vector, dot() trơn bằng đúng cosine() —
+    đẳng thức này là lý do mọi DB normalize lúc insert và không bao giờ
+    tính một phép cosine thật nào nữa."""
     a, b = [3.0, -1.0, 2.0], [0.5, 4.0, -2.0]
     assert math.isclose(dot(normalize(a), normalize(b)), cosine(a, b))
 
 
 def test_ch1_zero_vector_is_rejected():
-    """The zero vector has no direction, so cosine similarity to it is
-    undefined (0/0). A good database refuses it loudly at the door instead
-    of NaN-ing quietly at query time."""
+    """Vector không có hướng nào cả, nên độ tương đồng cosine với nó là
+    vô nghĩa (0/0). Database tốt từ chối nó ầm ĩ ngay ở cửa thay vì lặng
+    lẽ trả NaN lúc truy vấn."""
     try:
         normalize([0.0, 0.0])
         assert False, "expected ValueError"
@@ -71,12 +72,12 @@ def test_ch1_zero_vector_is_rejected():
 
 
 # ---------------------------------------------------------------------------
-# Chapter 2 — Exact search
+# Chương 2 — Tìm chính xác
 # ---------------------------------------------------------------------------
 
 def test_ch2_brute_force_is_exact():
-    """Brute force returns the TRUE nearest neighbors — we verify against an
-    independent full sort. This is our ground truth for grading HNSW."""
+    """Brute force trả về các hàng xóm gần nhất THẬT — ta kiểm chứng bằng
+    một lần sort toàn bộ độc lập. Đây là chân lý gốc để chấm điểm HNSW."""
     idx = build("flat")
     q = QUERIES[0]
     got = [i for _, i in idx.search(q, 10)]
@@ -87,9 +88,9 @@ def test_ch2_brute_force_is_exact():
 
 
 def test_ch2_brute_force_cost_is_the_whole_dataset():
-    """The problem statement, as an assertion: every query touches every
-    vector. 2000 today; 800 million at prod scale. This test motivates the
-    entire next chapter."""
+    """Đề bài, phát biểu thành assertion: mỗi truy vấn chạm vào mọi vector.
+    Hôm nay là 2000; ở quy mô production là 800 triệu. Test này là động cơ
+    của toàn bộ chương kế tiếp."""
     idx = build("flat")
     before = idx.distance_evals
     idx.search(QUERIES[1], 10)
@@ -97,12 +98,13 @@ def test_ch2_brute_force_cost_is_the_whole_dataset():
 
 
 # ---------------------------------------------------------------------------
-# Chapter 3 — HNSW
+# Chương 3 — HNSW
 # ---------------------------------------------------------------------------
 
 def recall_at_10(hnsw, flat, queries, ef=None):
-    """Recall@10 = |HNSW's top-10 ∩ true top-10| / 10, averaged over queries.
-    THE metric of the ANN world — every benchmark you've seen plots it."""
+    """Recall@10 = |top-10 của HNSW ∩ top-10 thật| / 10, trung bình trên các
+    truy vấn. Thước đo VÀNG của giới ANN — mọi benchmark bạn từng thấy đều
+    vẽ nó."""
     total = 0.0
     for q in queries:
         truth = {i for _, i in flat.search(q, 10)}
@@ -112,17 +114,17 @@ def recall_at_10(hnsw, flat, queries, ef=None):
 
 
 def test_ch3_hnsw_finds_almost_everything():
-    """'Approximate' is quantifiable, not hand-wavy: on uniformly random
-    vectors (the worst case) HNSW at default settings should still find
-    ≥90% of the true top-10."""
+    """'Xấp xỉ' là thứ đo được, không phải nói suông: trên vector ngẫu nhiên
+    phân bố đều (trường hợp xấu nhất), HNSW với cấu hình mặc định vẫn phải
+    tìm thấy ≥90% của top-10 thật."""
     r = recall_at_10(build("hnsw"), build("flat"), QUERIES)
     assert r >= 0.90, f"recall@10 = {r:.2f}"
 
 
 def test_ch3_hnsw_does_a_fraction_of_the_work():
-    """The payoff: HNSW answers queries while computing far fewer distances
-    than the N=800 brute force needs. This gap WIDENS with N — brute force
-    scales O(N), the graph walk ~O(log N)."""
+    """Phần thưởng: HNSW trả lời truy vấn với số phép đo khoảng cách ít hơn
+    hẳn con số N=2000 mà brute force cần. Khoảng cách này CÀNG RỘNG khi N
+    tăng — brute force leo thang O(N), còn cuộc dạo đồ thị ~O(log N)."""
     idx = build("hnsw")
     before = idx.distance_evals
     for q in QUERIES:
@@ -132,16 +134,17 @@ def test_ch3_hnsw_does_a_fraction_of_the_work():
 
 
 def test_ch3_ef_is_the_recall_speed_dial():
-    """Crank ef down → faster but blinder. Crank it up → slower but nearly
-    exact. This one knob is what 'tuning your vector DB' mostly means."""
+    """Vặn ef xuống → nhanh hơn nhưng mù hơn. Vặn lên → chậm hơn nhưng gần
+    như chính xác. Một cái núm này là phần lớn ý nghĩa của cụm từ 'tune
+    vector DB của bạn'."""
     hnsw, flat = build("hnsw"), build("flat")
     assert recall_at_10(hnsw, flat, QUERIES, ef=200) >= \
-           recall_at_10(hnsw, flat, QUERIES, ef=10) - 0.01  # noise margin
+           recall_at_10(hnsw, flat, QUERIES, ef=10) - 0.01  # biên độ nhiễu
 
 
 def test_ch3_the_graph_is_a_hierarchy():
-    """The layer lottery worked: layer 0 holds every node, and each higher
-    layer holds an exponentially thinner sample (the 'highway' shape)."""
+    """Trò xổ số tầng đã chạy đúng: tầng 0 chứa mọi nút, và mỗi tầng cao hơn
+    chứa một mẫu mỏng dần theo cấp số nhân (cái dáng 'đường cao tốc')."""
     idx = build("hnsw")
     sizes = [sum(1 for nb in idx._neighbors if len(nb) > L)
              for L in range(idx._max_level + 1)]
@@ -150,7 +153,7 @@ def test_ch3_the_graph_is_a_hierarchy():
 
 
 # ---------------------------------------------------------------------------
-# Chapter 4 — The database shell
+# Chương 4 — Lớp vỏ database
 # ---------------------------------------------------------------------------
 
 def make_db():
@@ -162,8 +165,8 @@ def make_db():
 
 
 def test_ch4_query_speaks_ids_and_metadata():
-    """The shell translates: you never see internal row numbers, only your
-    own ids and payloads, ranked by score."""
+    """Lớp vỏ làm phiên dịch: bạn không bao giờ thấy số hàng nội bộ, chỉ
+    thấy id và payload của chính mình, xếp hạng theo điểm."""
     hits = make_db().query(embed("how often to water a fern"), k=2)
     assert hits[0]["id"] == "fern"
     assert hits[0]["metadata"] == {"topic": "plants"}
@@ -171,17 +174,18 @@ def test_ch4_query_speaks_ids_and_metadata():
 
 
 def test_ch4_where_filters_but_search_still_ranks():
-    """A filter changes WHO is eligible, not HOW they're ranked: asking a
-    plant question with where={'topic': 'code'} must return only code docs."""
+    """Filter thay đổi AI đủ điều kiện, không thay đổi CÁCH xếp hạng: hỏi
+    một câu về cây cối với where={'topic': 'code'} thì chỉ được trả về tài
+    liệu code."""
     hits = make_db().query(embed("how often to water a fern"), k=5,
                            where={"topic": "code"})
     assert [h["id"] for h in hits] == ["git"]
 
 
 def test_ch4_delete_is_a_tombstone():
-    """Deleted rows vanish from results instantly — but the vector is still
-    inside the graph (len(_dead) grew). That gap between 'gone for you' and
-    'gone for real' is the tombstone pattern."""
+    """Hàng bị xoá biến mất khỏi kết quả ngay lập tức — nhưng vector vẫn nằm
+    trong đồ thị (len(_dead) đã tăng). Khoảng hở giữa 'mất với bạn' và 'mất
+    thật sự' chính là pattern tombstone."""
     db = make_db()
     db.delete("fern")
     assert "fern" not in [h["id"] for h in
@@ -190,9 +194,9 @@ def test_ch4_delete_is_a_tombstone():
 
 
 def test_ch4_upsert_replaces_and_bloats():
-    """Re-upserting an id serves the NEW vector/metadata, while quietly
-    tombstoning the old row — observable index bloat, the reason real DBs
-    have an 'optimize' button."""
+    """Upsert lại một id sẽ phục vụ vector/metadata MỚI, đồng thời lặng lẽ
+    tombstone hàng cũ — index bloat quan sát được, lý do các DB thật có nút
+    'optimize'."""
     db = make_db()
     db.upsert("fern", embed("ferns love humid bathrooms"), {"topic": "plants",
                                                             "v": 2})
@@ -202,12 +206,12 @@ def test_ch4_upsert_replaces_and_bloats():
 
 
 # ---------------------------------------------------------------------------
-# Chapter 5 — Persistence
+# Chương 5 — Lưu trữ
 # ---------------------------------------------------------------------------
 
 def test_ch5_a_database_survives_a_restart():
-    """Save, 'crash', load: the reborn DB gives byte-identical answers —
-    same ids, same scores, same respect for tombstones."""
+    """Save, 'crash', load: database tái sinh cho câu trả lời giống hệt từng
+    byte — cùng id, cùng điểm, cùng sự tôn trọng dành cho tombstone."""
     db = make_db()
     db.delete("cactus")
     q = embed("watering plants")
@@ -220,7 +224,7 @@ def test_ch5_a_database_survives_a_restart():
 
 
 # ---------------------------------------------------------------------------
-# Plain-python runner (pytest also picks these up automatically)
+# Bộ chạy Python thuần (pytest cũng tự nhặt được các test này)
 # ---------------------------------------------------------------------------
 
 if __name__ == "__main__":

@@ -32,7 +32,10 @@ python3 test_vectordb.py   # tour có hướng dẫn (pytest cũng chạy đư�
 - [x] [`vectordb.py`](vectordb.py) — chú thích đã dịch, code giữ nguyên
       từng token (kiểm chứng bởi CI qua
       `python3 tools/check_translation.py translations/vi/vectordb.py`)
-- [ ] `test_vectordb.py`
+- [x] [`test_vectordb.py`](test_vectordb.py) — bản dịch hoàn chỉnh; CI chạy
+      cả bộ test tiếng Việt
+
+Bản dịch tiếng Việt đã hoàn tất — dùng nó làm mẫu cho ngôn ngữ của bạn!
 
 Đóng góp bản dịch rất được hoan nghênh — xem
 [CONTRIBUTING.md](../../CONTRIBUTING.md).
