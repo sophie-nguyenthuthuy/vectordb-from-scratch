@@ -68,9 +68,13 @@ with just `translations/<lang>/README.md`. Tiếng Việt is seeded first in
 (strips comments from both files and diffs the code).
 
 **Extra chapters.** Self-contained annotated files in `extras/`, same rules
-(stdlib-only, heavily commented, tests that teach). Wishlist:
+(stdlib-only, heavily commented, tests that teach). Shipped so far:
 
-- IVF: k-means partitioning + `nprobe`, the *other* big ANN family
+- [Chapter 6 — IVF](extras/06_ivf.py): k-means partitioning + `nprobe`, the
+  *other* big ANN family — and the index that can actually delete
+
+Wishlist:
+
 - Product quantization: how 6GB of vectors fits in 200MB
 - HNSW's neighbor-diversity heuristic (§4 of the paper) and why it matters
 - Pre- vs post-filtering: filtered ANN done properly
