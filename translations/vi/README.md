@@ -29,7 +29,8 @@ python3 test_vectordb.py   # tour có hướng dẫn (pytest cũng chạy đư�
 ## Trạng thái bản dịch
 
 - [x] README (file này)
-- [ ] `vectordb.py` — dịch chú thích (code giữ nguyên, kiểm tra bằng
+- [x] [`vectordb.py`](vectordb.py) — chú thích đã dịch, code giữ nguyên
+      từng token (kiểm chứng bởi CI qua
       `python3 tools/check_translation.py translations/vi/vectordb.py`)
 - [ ] `test_vectordb.py`
 
